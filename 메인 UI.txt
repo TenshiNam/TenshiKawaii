@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
+using Voyage1970RhythmGame;
 
 namespace RhythmGameForms
 {
@@ -56,7 +57,12 @@ namespace RhythmGameForms
             if (!string.IsNullOrEmpty(selectedSong))
             {
                 MessageBox.Show($"선택한 곡: {selectedSong}");
-                // 여기에 곡을 재생하는 코드 또는 다음 단계로 진행하는 코드 추가
+
+
+                RhythmGameForm rhythmGameForm = new RhythmGameForm();
+                rhythmGameForm.Show();
+
+                this.Hide();
             }
             else
             {
