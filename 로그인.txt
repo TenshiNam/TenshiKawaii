@@ -1,0 +1,79 @@
+using System;
+using System.Windows.Forms;
+
+namespace RhythmGameForms
+{
+    public partial class LoginForm : Form
+    {
+        private TextBox usernameTextBox;
+        private TextBox passwordTextBox;
+        private Button loginButton;
+
+        public LoginForm()
+        {
+            InitializeComponent();
+            InitializeUI();
+        }
+
+        private void InitializeUI()
+        {
+            // 아이디 입력 텍스트박스
+            usernameTextBox = new TextBox
+            {
+                Location = new System.Drawing.Point(100, 50),
+                Size = new System.Drawing.Size(150, 20),
+                PlaceholderText = "Username"
+            };
+
+            // 비밀번호 입력 텍스트박스
+            passwordTextBox = new TextBox
+            {
+                Location = new System.Drawing.Point(100, 80),
+                Size = new System.Drawing.Size(150, 20),
+                PasswordChar = '*',
+                PlaceholderText = "Password"
+            };
+
+            // 로그인 버튼
+            loginButton = new Button
+            {
+                Location = new System.Drawing.Point(100, 110),
+                Size = new System.Drawing.Size(75, 30),
+                Text = "Login"
+            };
+            loginButton.Click += LoginButton_Click;
+
+            // 폼에 컨트롤 추가
+            Controls.Add(usernameTextBox);
+            Controls.Add(passwordTextBox);
+            Controls.Add(loginButton);
+        }
+
+        private void LoginButton_Click(object sender, EventArgs e)
+        {
+            // 간단한 사용자 인증
+            if (usernameTextBox.Text == "tenshichan" && passwordTextBox.Text == "kawaii")
+            {
+                MessageBox.Show("로그인 성공!");
+                // 여기에 노래 선택창으로 이동하는 코드를 추가하면 됩니다.
+            }
+            else
+            {
+                MessageBox.Show("아이디 또는 비밀번호가 올바르지 않습니다. 다시 시도해주세요.");
+            }
+        }
+    }
+
+    static class Program
+    {
+        [STAThread]
+        static void Main()
+        {
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+
+            // 로그인 창을 실행
+            Application.Run(new LoginForm());
+        }
+    }
+}
