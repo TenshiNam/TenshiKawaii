@@ -2,7 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
-using System.Media;
+using NAudio.Wave;
+using NAudio.Lame;
 
 namespace Voyage1970RhythmGame
 {
@@ -12,7 +13,8 @@ namespace Voyage1970RhythmGame
         private int score;
         private Random random;
         private Timer noteTimer;
-        private SoundPlayer musicPlayer;
+        private WaveOutEvent waveOut;
+        private AudioFileReader audioFile;
 
         public RhythmGameForm()
         {
@@ -42,15 +44,26 @@ namespace Voyage1970RhythmGame
 
         private void LoadMusic()
         {
-            musicPlayer = new SoundPlayer("Voyage1970.wav"); // 해당 파일 경로로 수정
+            ConvertMp3ToWav(@"C:\Users\zduri\Desktop\음악\16. Voyage 1970.mp3", "output.wav");
+            audioFile = new AudioFileReader("output.wav");
+            waveOut = new WaveOutEvent();
+            waveOut.DeviceNumber = 0;
+            waveOut.Init(audioFile);
         }
 
+        private void ConvertMp3ToWav(string mp3FilePath, string outputWavFilePath)
+        {
+            using (var reader = new Mp3FileReader(mp3FilePath))
+            {
+                WaveFileWriter.CreateWaveFile(outputWavFilePath, reader);
+            }
+        }
         private void StartGame()
         {
             score = 0;
             notes.Clear();
             noteTimer.Start();
-            musicPlayer.Play();
+            waveOut.Play();
         }
 
         private void RhythmGameForm_KeyDown(object sender, KeyEventArgs e)
