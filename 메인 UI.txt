@@ -1,0 +1,67 @@
+using System;
+using System.Collections.Generic;
+using System.Windows.Forms;
+
+namespace RhythmGameForms
+{
+    public partial class SongSelectionForm : Form
+    {
+        private ListBox songListBox;
+        private Button playButton;
+
+        // 가상의 곡 리스트 (실제로는 데이터베이스 또는 파일에서 가져와야 함)
+        private List<string> songList = new List<string>
+        {
+            "Song 1",
+            "Song 2",
+            "Song 3",
+            // ... 추가적인 곡들
+        };
+
+        public SongSelectionForm()
+        {
+            InitializeComponent();
+            InitializeUI();
+        }
+
+        private void InitializeUI()
+        {
+            // 곡 리스트를 표시할 ListBox 생성 및 설정
+            songListBox = new ListBox
+            {
+                Location = new System.Drawing.Point(50, 50),
+                Size = new System.Drawing.Size(200, 150),
+                DataSource = songList
+            };
+
+            // 플레이 버튼 생성 및 설정
+            playButton = new Button
+            {
+                Location = new System.Drawing.Point(100, 220),
+                Size = new System.Drawing.Size(100, 30),
+                Text = "Play"
+            };
+            playButton.Click += PlayButton_Click;
+
+            // 폼에 컨트롤 추가
+            Controls.Add(songListBox);
+            Controls.Add(playButton);
+        }
+
+        private void PlayButton_Click(object sender, EventArgs e)
+        {
+            // 선택된 곡 확인
+            string selectedSong = songListBox.SelectedItem as string;
+
+            if (!string.IsNullOrEmpty(selectedSong))
+            {
+                MessageBox.Show($"선택한 곡: {selectedSong}");
+                // 여기에 곡을 재생하는 코드 또는 다음 단계로 진행하는 코드 추가
+            }
+            else
+            {
+                MessageBox.Show("곡을 선택하세요.");
+            }
+        }
+    }
+}
