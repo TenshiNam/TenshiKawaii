@@ -64,7 +64,9 @@ namespace RhythmGameForms
                 Location = new Point(random.Next(Width - 50), 0),
                 Size = new Size(50, 20),
                 Speed = random.Next(1, 5),
-                Color = Color.Blue
+                Color = Color.Blue,
+                Random = random
+               
             };
 
             newNote.OnNoteRemove += (s, args) =>
@@ -114,6 +116,12 @@ namespace RhythmGameForms
         public Color Color { get; set; }
 
         private Random random;
+
+        public Random Random
+        {
+            get { return random; }
+            set { random = value; }
+        }
 
         public event EventHandler OnNoteRemove;
 
