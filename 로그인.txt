@@ -17,13 +17,19 @@ namespace RhythmGameForms
 
         private void InitializeUI()
         {
+           
+
+
+
             // 아이디 입력 텍스트박스
             usernameTextBox = new TextBox
             {
                 Location = new System.Drawing.Point(100, 50),
                 Size = new System.Drawing.Size(150, 20),
-                PlaceholderText = "Username"
+                Text = "Username"
             };
+            usernameTextBox.GotFocus += TextBox_GotFocus;
+            usernameTextBox.LostFocus += TextBox_LostFocus;
 
             // 비밀번호 입력 텍스트박스
             passwordTextBox = new TextBox
@@ -31,8 +37,10 @@ namespace RhythmGameForms
                 Location = new System.Drawing.Point(100, 80),
                 Size = new System.Drawing.Size(150, 20),
                 PasswordChar = '*',
-                PlaceholderText = "Password"
+                Text = "Password"
             };
+            passwordTextBox.GotFocus += TextBox_GotFocus;
+            passwordTextBox.LostFocus += TextBox_LostFocus;
 
             // 로그인 버튼
             loginButton = new Button
@@ -47,12 +55,38 @@ namespace RhythmGameForms
             Controls.Add(usernameTextBox);
             Controls.Add(passwordTextBox);
             Controls.Add(loginButton);
+            
+        }
+
+        private void TextBox_GotFocus(object sender, EventArgs e)
+        {
+            TextBox textBox = (TextBox)sender;
+            if (textBox.Text == "Username" || textBox.Text == "Password")
+            {
+                textBox.Text = "";
+            }
+        }
+
+        private void TextBox_LostFocus(object sender, EventArgs e)
+        {
+            TextBox textBox = (TextBox)sender;
+            if (string.IsNullOrWhiteSpace(textBox.Text))
+            {
+                if (textBox == usernameTextBox)
+                {
+                    textBox.Text = "Username";
+                }
+                else if (textBox == passwordTextBox)
+                {
+                    textBox.Text = "Password";
+                }
+            }
         }
 
         private void LoginButton_Click(object sender, EventArgs e)
         {
             // 간단한 사용자 인증
-            if (usernameTextBox.Text == "tenshichan" && passwordTextBox.Text == "kawaii")
+            if (CheckCredentials(usernameTextBox.Text, passwordTextBox.Text))
             {
                 MessageBox.Show("로그인 성공!");
                 // 여기에 노래 선택창으로 이동하는 코드를 추가하면 됩니다.
@@ -62,18 +96,11 @@ namespace RhythmGameForms
                 MessageBox.Show("아이디 또는 비밀번호가 올바르지 않습니다. 다시 시도해주세요.");
             }
         }
-    }
 
-    static class Program
-    {
-        [STAThread]
-        static void Main()
+        private bool CheckCredentials(string username, string password)
         {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-
-            // 로그인 창을 실행
-            Application.Run(new LoginForm());
+            // 간단한 사용자 인증 체크
+            return username == "tenshichan" && password == "kawaii";
         }
     }
 }
