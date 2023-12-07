@@ -52,7 +52,17 @@ namespace RhythmGameForms
         {
             CheckInput(e.KeyCode);
         }
+        private void Handel(Keys key)
+        {
+            // 사용자 입력에 해당하는 노트 찾아서 제거
+            Note noteToRemove = notes.Find(note => (key == Keys.A || key == Keys.S || key == Keys.K || key == Keys.L) && note.Key == key && note.Bottom >= Height - 50);
 
+            if (noteToRemove != null)
+            {
+                notes.Remove(noteToRemove);
+                Controls.Remove(noteToRemove);
+            }
+        }
         private void GenerateNote()
         {
             Note newNote = new Note(random)
