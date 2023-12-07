@@ -1,0 +1,143 @@
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Windows.Forms;
+
+namespace RhythmGameForms
+{
+    public partial class DjMaxStyleGameForm : Form
+    {
+        private List<Note> notes;
+        private int health; // 플레이어의 체력
+        private int maxHealth = 10; // 최대 체력
+        private int wrongCount; // 틀린 횟수
+        private Random random;
+        public DjMaxStyleGameForm()
+        {
+            InitializeComponent();
+            InitializeGame();
+            InitializeUI();
+            random = new Random();
+        }
+
+        private void InitializeGame()
+        {
+            notes = new List<Note>();
+            health = maxHealth;
+            wrongCount = 0;
+
+            // 타일이 생성되는 주기 설정
+            Timer noteTimer = new Timer();
+            noteTimer.Interval = 1000; // 1초
+            noteTimer.Tick += NoteTimer_Tick;
+            noteTimer.Start();
+        }
+
+        private void InitializeUI()
+        {
+            // 폼 초기 설정
+            Width = 800;
+            Height = 400;
+            KeyDown += DjMaxStyleGameForm_KeyDown;
+
+            // 초기 노트 생성
+            GenerateNote();
+        }
+
+        private void NoteTimer_Tick(object sender, EventArgs e)
+        {
+            // 주기적으로 노트를 생성
+            GenerateNote();
+        }
+
+        private void DjMaxStyleGameForm_KeyDown(object sender, KeyEventArgs e)
+        {
+            // 사용자 입력 처리
+            CheckInput(e.KeyCode);
+        }
+
+        private void GenerateNote()
+        {
+            // 새로운 노트 생성 및 추가
+            Note newNote = new Note
+            {
+                Location = new Point(random.Next(Width - 50), 0),
+                Size = new Size(50, 20),
+                Speed = random.Next(1, 5),
+                Color = Color.Blue
+            };
+
+            newNote.OnNoteRemove += (s, args) =>
+            {
+                // 노트가 화면을 벗어나면 피 깍기 및 틀린 횟수 증가
+                if (newNote.Bottom >= Height)
+                {
+                    health--;
+                    wrongCount++;
+
+                    // 일정 횟수 이상 틀리면 게임 오버
+                    if (wrongCount >= 10)
+                    {
+                        GameOver();
+                    }
+                }
+            };
+
+            notes.Add(newNote);
+            Controls.Add(newNote);
+        }
+
+        private void CheckInput(Keys key)
+        {
+            // 사용자 입력에 해당하는 노트 찾아서 제거
+            Note noteToRemove = notes.Find(note => note.Key == key && note.Bottom >= Height - 50);
+
+            if (noteToRemove != null)
+            {
+                notes.Remove(noteToRemove);
+                Controls.Remove(noteToRemove);
+            }
+        }
+
+        private void GameOver()
+        {
+            MessageBox.Show("게임 오버!");
+            // 게임 오버에 대한 추가 처리를 여기에 구현
+            // 예를 들면 게임 리셋 또는 메인 화면으로 돌아가는 등
+        }
+    }
+
+    public class Note : PictureBox
+    {
+        public Keys Key { get; set; }
+        public int Speed { get; set; }
+        public Color Color { get; set; }
+
+        private Random random;
+
+        public event EventHandler OnNoteRemove;
+
+        public Note()
+        {
+            random = new Random();
+            // 노트 초기 설정
+            Key = (Keys)Enum.GetValues(typeof(Keys)).GetValue(random.Next(65, 90));
+            BackColor = Color;
+            SizeMode = PictureBoxSizeMode.StretchImage;
+            SetBounds(0, 0, 50, 20);
+        }
+
+        protected override void OnMove(EventArgs e)
+        {
+            // 노트 이동 처리
+            base.OnMove(e);
+
+            // 화면 밖으로 나가면 제거 이벤트 발생
+            if (Bottom >= Parent.Height)
+            {
+                OnNoteRemove?.Invoke(this, EventArgs.Empty);
+                Dispose();
+            }
+        }
+    }
+}
