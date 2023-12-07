@@ -17,7 +17,21 @@ namespace RhythmGameForms
 
         private void InitializeUI()
         {
-           
+            //아이디 라벨
+            Label idLabel = new Label
+            {
+                Location = new System.Drawing.Point(80, 55),
+                Size = new System.Drawing.Size(40, 20),
+                Text = "ID"
+            };
+
+            //비밀번호 라벨
+            Label pwLabel = new Label
+            {
+                Location = new System.Drawing.Point(70, 85),
+                Size = new System.Drawing.Size(40, 20),
+                Text = "PW"
+            };
 
 
 
@@ -55,7 +69,8 @@ namespace RhythmGameForms
             Controls.Add(usernameTextBox);
             Controls.Add(passwordTextBox);
             Controls.Add(loginButton);
-            
+            Controls.Add(idLabel);
+            Controls.Add(pwLabel);
         }
 
         private void TextBox_GotFocus(object sender, EventArgs e)
