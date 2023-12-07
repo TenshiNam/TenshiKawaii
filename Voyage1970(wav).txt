@@ -1,0 +1,134 @@
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Windows.Forms;
+using System.Media;
+
+namespace Voyage1970RhythmGame
+{
+    public partial class RhythmGameForm : Form
+    {
+        private List<Note> notes;
+        private int score;
+        private Random random;
+        private Timer noteTimer;
+        private SoundPlayer musicPlayer;
+
+        public RhythmGameForm()
+        {
+            InitializeComponent();
+            InitializeGame();
+            InitializeUI();
+            LoadMusic();
+        }
+
+        private void InitializeGame()
+        {
+            notes = new List<Note>();
+            score = 0;
+            random = new Random();
+        }
+
+        private void InitializeUI()
+        {
+            Width = 800;
+            Height = 400;
+            KeyDown += RhythmGameForm_KeyDown;
+
+            noteTimer = new Timer();
+            noteTimer.Interval = 1000;
+            noteTimer.Tick += NoteTimer_Tick;
+        }
+
+        private void LoadMusic()
+        {
+            musicPlayer = new SoundPlayer("Voyage1970.wav"); // 해당 파일 경로로 수정
+        }
+
+        private void StartGame()
+        {
+            score = 0;
+            notes.Clear();
+            noteTimer.Start();
+            musicPlayer.Play();
+        }
+
+        private void RhythmGameForm_KeyDown(object sender, KeyEventArgs e)
+        {
+            CheckInput(e.KeyCode);
+        }
+
+        private void NoteTimer_Tick(object sender, EventArgs e)
+        {
+            GenerateNote();
+        }
+
+        private void GenerateNote()
+        {
+            Note newNote = new Note(random)
+            {
+                Location = new Point(random.Next(Width - 50), 0),
+                Size = new Size(50, 20),
+                Speed = random.Next(1, 5),
+                Color = Color.Blue,
+            };
+
+            newNote.OnNoteRemove += (s, args) =>
+            {
+                if (newNote.Bottom >= Height)
+                {
+                    score++; // 노트가 성공적으로 플레이어에게 도착하면 점수 증가
+                }
+            };
+
+            notes.Add(newNote);
+            Controls.Add(newNote);
+        }
+
+        private void CheckInput(Keys key)
+        {
+            Note noteToRemove = notes.Find(note => note.Key == key && note.Bottom >= Height - 50);
+
+            if (noteToRemove != null)
+            {
+                notes.Remove(noteToRemove);
+                Controls.Remove(noteToRemove);
+            }
+        }
+
+        private class Note : PictureBox
+        {
+            public Keys Key { get; }
+            public int Speed { get; set; }
+            public Color Color { get; set; }
+
+            private Random random;
+
+            public event EventHandler OnNoteRemove;
+
+            public Note(Random random)
+            {
+                this.random = random;
+
+                Key = (Keys)Enum.GetValues(typeof(Keys)).GetValue(random.Next(65, 90));
+                BackColor = Color;
+                SizeMode = PictureBoxSizeMode.StretchImage;
+                SetBounds(0, 0, 50, 20);
+            }
+
+            protected override void OnMove(EventArgs e)
+            {
+                base.OnMove(e);
+
+                if (Parent == null)
+                    return;
+
+                if (Bottom >= Parent.Height)
+                {
+                    OnNoteRemove?.Invoke(this, EventArgs.Empty);
+                    Dispose();
+                }
+            }
+        }
+    }
+}
