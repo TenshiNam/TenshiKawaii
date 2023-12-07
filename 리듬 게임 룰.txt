@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace RhythmGameForms
@@ -45,7 +46,20 @@ namespace RhythmGameForms
 
         private void NoteTimer_Tick(object sender, EventArgs e)
         {
-            GenerateNote();
+            foreach (var note in notes.ToList())
+            {
+                note.Top += note.Speed; // 노트의 이동
+
+                // 노트가 화면을 벗어나면 제거 이벤트 발생
+                if (note.Bottom >= Height)
+                {
+                    note.OnNoteRemove?.Invoke(note, EventArgs.Empty);
+                    note.Dispose();
+                    notes.Remove(note);
+                }
+            }
+
+            GenerateNote(); // 새로운 노트 생성
         }
 
         private void DjMaxStyleGameForm_KeyDown(object sender, KeyEventArgs e)
@@ -63,6 +77,7 @@ namespace RhythmGameForms
                 Controls.Remove(noteToRemove);
             }
         }
+      
         private void GenerateNote()
         {
             Note newNote = new Note(random)
@@ -130,6 +145,8 @@ namespace RhythmGameForms
             SetBounds(0, 0, 50, 20);
         }
 
+        
+        
         protected override void OnMove(EventArgs e)
         {
             base.OnMove(e);
@@ -139,7 +156,9 @@ namespace RhythmGameForms
 
             if (Bottom >= Parent.Height)
             {
+                // 이벤트를 발생시키는 코드 수정
                 OnNoteRemove?.Invoke(this, EventArgs.Empty);
+
                 Dispose();
             }
         }
