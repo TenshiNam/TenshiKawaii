@@ -3,18 +3,19 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 using NAudio.Wave;
-using NAudio.Lame;
 
-namespace Voyage1970RhythmGame
+namespace RhythmGame
 {
     public partial class RhythmGameForm : Form
     {
         private List<Note> notes;
         private int score;
-        private Random random;
         private Timer noteTimer;
         private WaveOutEvent waveOut;
         private AudioFileReader audioFile;
+
+        private const int NumZones = 4; // 구역의 수
+        private const int ZoneWidth = 200; // 각 구역의 너비
 
         public RhythmGameForm()
         {
@@ -28,27 +29,29 @@ namespace Voyage1970RhythmGame
         {
             notes = new List<Note>();
             score = 0;
-            random = new Random();
         }
 
         private void InitializeUI()
         {
-            Width = 800;
+            Width = ZoneWidth * NumZones;
             Height = 400;
             KeyDown += RhythmGameForm_KeyDown;
 
             noteTimer = new Timer();
-            noteTimer.Interval = 1000;
+            noteTimer.Interval = 200;
             noteTimer.Tick += NoteTimer_Tick;
         }
 
         private void LoadMusic()
         {
+            // MP3 파일을 WAV 파일로 변환 후 로드
             ConvertMp3ToWav(@"C:\Users\zduri\Desktop\음악\16. Voyage 1970.mp3", "output.wav");
             audioFile = new AudioFileReader("output.wav");
             waveOut = new WaveOutEvent();
             waveOut.DeviceNumber = 0;
             waveOut.Init(audioFile);
+
+            StartGame();
         }
 
         private void ConvertMp3ToWav(string mp3FilePath, string outputWavFilePath)
@@ -58,6 +61,7 @@ namespace Voyage1970RhythmGame
                 WaveFileWriter.CreateWaveFile(outputWavFilePath, reader);
             }
         }
+
         private void StartGame()
         {
             score = 0;
@@ -78,28 +82,47 @@ namespace Voyage1970RhythmGame
 
         private void GenerateNote()
         {
-            Note newNote = new Note(random)
+            // 각 구역에 노트 생성
+            for (int i = 0; i < NumZones; i++)
             {
-                Location = new Point(random.Next(Width - 50), 0),
-                Size = new Size(50, 20),
-                Speed = random.Next(1, 5),
-                Color = Color.Blue,
-            };
-
-            newNote.OnNoteRemove += (s, args) =>
-            {
-                if (newNote.Bottom >= Height)
+                Note newNote = new Note()
                 {
-                    score++; // 노트가 성공적으로 플레이어에게 도착하면 점수 증가
-                }
-            };
+                    Location = new Point(i * ZoneWidth, 0),
+                    Size = new Size(ZoneWidth, 20),
+                    Speed = 5,
+                    Color = Color.Blue,
+                    Key = GetKeyForZone(i),
+                };
 
-            notes.Add(newNote);
-            Controls.Add(newNote);
+                newNote.OnNoteRemove += (s, args) =>
+                {
+                    if (newNote.Bottom >= Height)
+                    {
+                        score++; // 노트가 성공적으로 플레이어에게 도착하면 점수 증가
+                    }
+                };
+
+                notes.Add(newNote);
+                Controls.Add(newNote);
+            }
+        }
+
+        private Keys GetKeyForZone(int zoneIndex)
+        {
+            // 각 구역에 대응되는 키 반환
+            switch (zoneIndex)
+            {
+                case 0: return Keys.A;
+                case 1: return Keys.S;
+                case 2: return Keys.J;
+                case 3: return Keys.K;
+                default: return Keys.None;
+            }
         }
 
         private void CheckInput(Keys key)
         {
+            // 해당 키에 대응되는 노트를 찾아서 처리
             Note noteToRemove = notes.Find(note => note.Key == key && note.Bottom >= Height - 50);
 
             if (noteToRemove != null)
@@ -111,22 +134,17 @@ namespace Voyage1970RhythmGame
 
         private class Note : PictureBox
         {
-            public Keys Key { get; }
+            public Keys Key { get; set; }
             public int Speed { get; set; }
             public Color Color { get; set; }
 
-            private Random random;
-
             public event EventHandler OnNoteRemove;
 
-            public Note(Random random)
+            public Note()
             {
-                this.random = random;
-
-                Key = (Keys)Enum.GetValues(typeof(Keys)).GetValue(random.Next(65, 90));
                 BackColor = Color;
                 SizeMode = PictureBoxSizeMode.StretchImage;
-                SetBounds(0, 0, 50, 20);
+                SetBounds(0, 0, ZoneWidth, 20);
             }
 
             protected override void OnMove(EventArgs e)
