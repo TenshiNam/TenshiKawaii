@@ -1,90 +1,69 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
 using System.Windows.Forms;
 
-namespace RhythmGameForms
+namespace RhythmGame
 {
-    public partial class DjMaxStyleGameForm : Form
+    public partial class RhythmGameForm : Form
     {
         private List<Note> notes;
-        private int health;
-        private int maxHealth = 10;
-        private int wrongCount;
-        private Random random;
+        private int score;
+        private Timer noteTimer;
 
-        public DjMaxStyleGameForm()
+        private const int NumLines = 4;
+        private const int LineWidth = 50;
+
+        public RhythmGameForm()
         {
             InitializeComponent();
             InitializeGame();
             InitializeUI();
+            StartGame();
         }
 
         private void InitializeGame()
         {
             notes = new List<Note>();
-            health = maxHealth;
-            wrongCount = 0;
-
-            Timer noteTimer = new Timer();
-            noteTimer.Interval = 1000;
-            noteTimer.Tick += NoteTimer_Tick;
-            noteTimer.Start();
-
-            random = new Random();
+            score = 0;
         }
 
         private void InitializeUI()
         {
-            Width = 800;
+            Width = NumLines * LineWidth;
             Height = 400;
-            KeyDown += DjMaxStyleGameForm_KeyDown;
+            KeyDown += RhythmGameForm_KeyDown;
 
-            GenerateNote();
+            noteTimer = new Timer();
+            noteTimer.Interval = 200; // 노트 생성 간격 (밀리초)
+            noteTimer.Tick += NoteTimer_Tick;
+        }
+
+        private void StartGame()
+        {
+            noteTimer.Start();
+        }
+
+        private void RhythmGameForm_KeyDown(object sender, KeyEventArgs e)
+        {
+            CheckInput(e.KeyCode);
         }
 
         private void NoteTimer_Tick(object sender, EventArgs e)
         {
-            foreach (var note in notes.ToList())
-            {
-                note.Top += note.Speed; // 노트의 이동
-
-                // 노트가 화면을 벗어나면 제거 이벤트 발생
-                if (note.Bottom >= Height)
-                {
-                    note.OnNoteRemove?.Invoke(note, EventArgs.Empty);
-                    note.Dispose();
-                    notes.Remove(note);
-                }
-            }
-
-            GenerateNote(); // 새로운 노트 생성
+            GenerateNote();
         }
 
-        private void DjMaxStyleGameForm_KeyDown(object sender, KeyEventArgs e)
-        {
-            CheckInput(e.KeyCode);
-        }
-        private void Handel(Keys key)
-        {
-            // 사용자 입력에 해당하는 노트 찾아서 제거
-            Note noteToRemove = notes.Find(note => (key == Keys.A || key == Keys.S || key == Keys.K || key == Keys.L) && note.Key == key && note.Bottom >= Height - 50);
-
-            if (noteToRemove != null)
-            {
-                notes.Remove(noteToRemove);
-                Controls.Remove(noteToRemove);
-            }
-        }
-      
         private void GenerateNote()
         {
-            Note newNote = new Note(random)
+            Random random = new Random();
+            int lineNumber = random.Next(NumLines);
+
+            Note newNote = new Note(lineNumber)
             {
-                Location = new Point(random.Next(Width - 50), 0),
-                Size = new Size(50, 20),
-                Speed = random.Next(1, 5),
+                Location = new Point(lineNumber * LineWidth, 0),
+                Size = new Size(LineWidth, 20),
+                Speed = 5,
                 Color = Color.Blue,
             };
 
@@ -92,13 +71,7 @@ namespace RhythmGameForms
             {
                 if (newNote.Bottom >= Height)
                 {
-                    health--;
-                    wrongCount++;
-
-                    if (wrongCount >= 10)
-                    {
-                        GameOver();
-                    }
+                    score++; // 노트가 성공적으로 플레이어에게 도착하면 점수 증가
                 }
             };
 
@@ -108,58 +81,60 @@ namespace RhythmGameForms
 
         private void CheckInput(Keys key)
         {
-            Note noteToRemove = notes.Find(note => note.Key == key && note.Bottom >= Height - 50);
+            int lineNumber = GetLineNumberForKey(key);
 
-            if (noteToRemove != null)
+            if (lineNumber != -1)
             {
-                notes.Remove(noteToRemove);
-                Controls.Remove(noteToRemove);
+                Note noteToRemove = notes.Find(note => note.LineNumber == lineNumber && note.Bottom >= Height - 50);
+
+                if (noteToRemove != null)
+                {
+                    notes.Remove(noteToRemove);
+                    Controls.Remove(noteToRemove);
+                }
             }
         }
 
-        private void GameOver()
+        private int GetLineNumberForKey(Keys key)
         {
-            MessageBox.Show("게임 오버!");
-            // 게임 오버에 대한 추가 처리를 여기에 구현
-            // 예를 들면 게임 리셋 또는 메인 화면으로 돌아가는 등
-        }
-    }
-
-    public class Note : PictureBox
-    {
-        public Keys Key { get; set; }
-        public int Speed { get; set; }
-        public Color Color { get; set; }
-
-        private Random random;
-
-        public event EventHandler OnNoteRemove;
-
-        public Note(Random random)
-        {
-            this.random = random;
-
-            Key = (Keys)Enum.GetValues(typeof(Keys)).GetValue(random.Next(65, 90));
-            BackColor = Color;
-            SizeMode = PictureBoxSizeMode.StretchImage;
-            SetBounds(0, 0, 50, 20);
-        }
-
-        
-        
-        protected override void OnMove(EventArgs e)
-        {
-            base.OnMove(e);
-
-            if (Parent == null)
-                return;
-
-            if (Bottom >= Parent.Height)
+            switch (key)
             {
-                // 이벤트를 발생시키는 코드 수정
-                OnNoteRemove?.Invoke(this, EventArgs.Empty);
+                case Keys.A: return 0;
+                case Keys.B: return 1;
+                case Keys.J: return 2;
+                case Keys.K: return 3;
+                default: return -1;
+            }
+        }
 
-                Dispose();
+        private class Note : PictureBox
+        {
+            public int LineNumber { get; }
+            public int Speed { get; set; }
+            public Color Color { get; set; }
+
+            public event EventHandler OnNoteRemove;
+
+            public Note(int lineNumber)
+            {
+                LineNumber = lineNumber;
+                BackColor = Color;
+                SizeMode = PictureBoxSizeMode.StretchImage;
+                SetBounds(0, 0, LineWidth, 20);
+            }
+
+            protected override void OnMove(EventArgs e)
+            {
+                base.OnMove(e);
+
+                if (Parent == null)
+                    return;
+
+                if (Bottom >= Parent.Height)
+                {
+                    OnNoteRemove?.Invoke(this, EventArgs.Empty);
+                    Dispose();
+                }
             }
         }
     }
